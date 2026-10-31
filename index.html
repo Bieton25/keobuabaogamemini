@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trò Chơi Kéo - Búa - Bao</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f9;
+        text-align: center;
+        margin: 0;
+        padding: 60px;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: #ffd700;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .score-board {
+        display: flex;
+        justify-content: space-around;
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 20px;
+        color: #333;
+      }
+      .buttons button {
+        font-size: 40px;
+        padding: 25px 35px;
+        margin: 10px;
+        cursor: pointer;
+        border: line;
+        border-radius: 50px;
+        background-color: #007bff;
+        color: white;
+        transition: background 0.3s;
+      }
+      .buttons button:hover {
+        background-color: #0056b3;
+      }
+      .buttons button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+      }
+      .status {
+        font-size: 25px;
+        margin: 20px 0;
+        font-weight: bold;
+        color: #d9534f;
+      }
+      .history {
+        text-align: left;
+        background: #eee;
+        padding: 15px;
+        border-radius: 5px;
+        max-height: 250px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Trò Chơi Kéo - Búa - Bao</h2>
+      <p>Trò chơi kết thúc khi có người đạt 3.5 điểm</p>
+
+      <div class="score-board">
+        <div>Người: <span id="diemNguoi">0</span></div>
+        <div>Máy: <span id="diemMay">0</span></div>
+      </div>
+
+      <div class="buttons" id="btnGroup">
+        <button onclick="choi('kéo')">✌️ Kéo</button>
+        <button onclick="choi('búa')">✊ Búa</button>
+        <button onclick="choi('bao')">🖐️ Bao</button>
+      </div>
+
+      <div class="status" id="trangThai">
+        Hãy chọn Kéo, Búa, hoặc Bao để bắt đầu!
+      </div>
+
+      <h3>Lịch sử chơi:</h3>
+      <div class="history" id="lichSu"></div>
+    </div>
+
+    <script>
+      let diemNguoi = 0;
+      let diemMay = 0;
+      let lanChoi = 1;
+
+      function choi(nguoiRa) {
+        // Nếu đã có người >= 3.5 điểm thì không cho chơi tiếp
+        if (diemNguoi >= 3.5 || diemMay >= 3.5) return;
+
+        const luaChon = ["kéo", "búa", "bao"];
+        const mayRa = luaChon[Math.floor(Math.random() * 3)];
+        let ketQua = "";
+
+        // Logic tính điểm
+        if (nguoiRa === mayRa) {
+          ketQua = "Người hòa";
+          diemNguoi += 0.5;
+          diemMay += 0.5;
+        } else if (
+          (nguoiRa === "kéo" && mayRa === "bao") ||
+          (nguoiRa === "búa" && mayRa === "kéo") ||
+          (nguoiRa === "bao" && mayRa === "búa")
+        ) {
+          ketQua = "Người thắng";
+          diemNguoi += 1;
+        } else {
+          ketQua = "Máy thắng";
+          diemMay += 1;
+        }
+
+        // Cập nhật điểm lên màn hình
+        document.getElementById("diemNguoi").innerText = diemNguoi;
+        document.getElementById("diemMay").innerText = diemMay;
+
+        // Cập nhật thông báo trạng thái
+        document.getElementById("trangThai").innerText =
+          `Lần ${lanChoi}: Bạn ra ${nguoiRa.toUpperCase()}, Máy ra ${mayRa.toUpperCase()} => ${ketQua}!`;
+
+        // Ghi vào lịch sử
+        const dongLichSu = document.createElement("div");
+        dongLichSu.innerText = `Lần ${lanChoi} | Người: ${nguoiRa} - Máy: ${mayRa} | Kết quả: ${ketQua}`;
+        // Thêm lịch sử mới lên đầu danh sách
+        const lichSuDiv = document.getElementById("lichSu");
+        lichSuDiv.insertBefore(dongLichSu, lichSuDiv.firstChild);
+
+        lanChoi++;
+
+        // Kiểm tra điều kiện dừng
+        if (diemNguoi >= 3.5 || diemMay >= 3.5) {
+          ketThucTroChoi();
+        }
+      }
+
+      function ketThucTroChoi() {
+        // Vô hiệu hóa các nút bấm
+        const buttons = document.querySelectorAll(".buttons button");
+        buttons.forEach((btn) => (btn.disabled = true));
+
+        // Thông báo kết quả chung cuộc
+        let ketLuan = "KẾT QUẢ CHUNG CUỘC: ";
+        if (diemNguoi > diemMay) ketLuan += "BẠN ĐÃ THẮNG! 🎉";
+        else if (diemNguoi < diemMay) ketLuan += "MÁY ĐÃ THẮNG! 🤖";
+        else ketLuan += "HÒA NHAU! 🤝";
+
+        document.getElementById("trangThai").innerText = ketLuan;
+        document.getElementById("trangThai").style.color = "#28a745";
+        document.getElementById("trangThai").style.fontSize = "22px";
+      }
+    </script>
+  </body>
+</html>
