@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trò Chơi Kéo - Búa - Bao</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f9;
+        text-align: center;
+        margin: 0;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: #ffc0cb;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      /* --- HIỆU ỨNG TIÊU ĐỀ MỚI THÊM --- */
+      @keyframes nhapNhayVien {
+        0% {
+          border-color: orange;
+        }
+        50% {
+          border-color: transparent;
+        }
+        100% {
+          border-color: orange;
+        }
+      }
+
+      .tieu-de-game {
+        color: blue;
+        border: 4px solid orange;
+        padding: 25px 40px;
+        display: inline-block;
+        font-size: 30px;
+        font-weight: bold;
+        border-radius: 10px;
+        animation: nhapNhayVien 1s infinite;
+        margin-bottom: 30px;
+      }
+
+      .score-board {
+        display: flex;
+        justify-content: space-around;
+        font-size: 30px;
+        font-weight: bold;
+        margin-bottom: 20px;
+        color: #333;
+      }
+
+      .buttons button {
+        font-size: 35px;
+        padding: 30px 40px;
+        margin: 15px;
+        cursor: pointer;
+        border: none;
+        border-radius: 25px;
+        background-color: #007bff;
+        color: white;
+        transition: background 0.3s;
+      }
+
+      .buttons button:hover {
+        background-color: #0056b3;
+      }
+
+      .buttons button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+      }
+
+      .status {
+        font-size: px;
+        margin: 20px 0;
+        font-weight: bold;
+        color: #d9534f;
+      }
+
+      .btn-restart {
+        font-size: 18px;
+        padding: 10px 20px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        display: none; /* Ẩn đi lúc đầu */
+        margin: 10px auto;
+      }
+
+      .btn-restart:hover {
+        background-color: #218838;
+      }
+
+      .history {
+        text-align: left;
+        background: #eee;
+        padding: 15px;
+        border-radius: 5px;
+        max-height: 250px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Khối hiển thị tiêu đề nhấp nháy -->
+      <div class="tieu-de-game">Trò Chơi Kéo - Búa - Bao</div>
+      <p>Trò chơi tự động kết thúc khi có người đạt 3.5 điểm</p>
+
+      <div class="score-board">
+        <div>Người: <span id="diemNguoi">0</span></div>
+        <div>Máy: <span id="diemMay">0</span></div>
+      </div>
+
+      <div class="buttons" id="btnGroup">
+        <button onclick="choi('kéo')">✌️ Kéo</button>
+        <button onclick="choi('búa')">✊ Búa</button>
+        <button onclick="choi('bao')">🖐️ Bao</button>
+      </div>
+
+      <div class="status" id="trangThai">
+        Hãy chọn Kéo, Búa, hoặc Bao để bắt đầu!
+      </div>
+
+      <button class="btn-restart" id="btnChoiLai" onclick="choiLai()">
+        🔄 Chơi Mới Lại
+      </button>
+
+      <h3>Lịch sử chơi:</h3>
+      <div class="history" id="lichSu"></div>
+    </div>
+
+    <script>
+      let diemNguoi = 0;
+      let diemMay = 0;
+      let lanChoi = 1;
+      let nhacNenDaPhat = false;
+
+      // Khai báo âm thanh (Yêu cầu 2 file nhạc nằm chung thư mục với file index.html này)
+      const amThanhThang = new Audio("Thang.mp3");
+      const nhacNen = new Audio("nhacnengame.mp3");
+      nhacNen.loop = true;
+
+      function choi(nguoiRa) {
+        // Phát nhạc nền ở lần tương tác đầu tiên
+        if (!nhacNenDaPhat) {
+          nhacNen.play();
+          nhacNenDaPhat = true;
+        }
+
+        // Chặn nếu game đã kết thúc
+        if (diemNguoi >= 3.5 || diemMay >= 3.5) return;
+
+        const luaChon = ["kéo", "búa", "bao"];
+        const mayRa = luaChon[Math.floor(Math.random() * 3)];
+        let ketQua = "";
+
+        // Logic rẽ nhánh phân định thắng thua
+        if (nguoiRa === mayRa) {
+          ketQua = "Người hòa";
+          diemNguoi += 0.5;
+          diemMay += 0.5;
+        } else if (
+          (nguoiRa === "kéo" && mayRa === "bao") ||
+          (nguoiRa === "búa" && mayRa === "kéo") ||
+          (nguoiRa === "bao" && mayRa === "búa")
+        ) {
+          ketQua = "Người thắng";
+          diemNguoi += 1;
+          // Phát nhạc thắng
+          amThanhThang.currentTime = 0;
+          amThanhThang.play();
+        } else {
+          ketQua = "Máy thắng";
+          diemMay += 1;
+        }
+
+        // Cập nhật giao diện điểm
+        document.getElementById("diemNguoi").innerText = diemNguoi;
+        document.getElementById("diemMay").innerText = diemMay;
+        document.getElementById("trangThai").innerText =
+          `Lần ${lanChoi}: Bạn ra ${nguoiRa.toUpperCase()}, Máy ra ${mayRa.toUpperCase()} => ${ketQua}!`;
+        document.getElementById("trangThai").style.color = "#d9534f";
+
+        // Ghi lịch sử
+        const dongLichSu = document.createElement("div");
+        dongLichSu.innerText = `Lần ${lanChoi} | Người: ${nguoiRa} - Máy: ${mayRa} | Kết quả: ${ketQua}`;
+        const lichSuDiv = document.getElementById("lichSu");
+        lichSuDiv.insertBefore(dongLichSu, lichSuDiv.firstChild);
+
+        lanChoi++;
+
+        // Kiểm tra điểm dừng
+        if (diemNguoi >= 3.5 || diemMay >= 3.5) {
+          ketThucTroChoi();
+        }
+      }
+
+      function ketThucTroChoi() {
+        // Tắt nhạc nền
+        nhacNen.pause();
+        nhacNen.currentTime = 0;
+        nhacNenDaPhat = false;
+
+        // Khóa các nút đánh
+        const buttons = document.querySelectorAll(".buttons button");
+        buttons.forEach((btn) => (btn.disabled = true));
+
+        // In kết quả cuối cùng
+        let ketLuan = "KẾT QUẢ CHUNG CUỘC: ";
+        if (diemNguoi > diemMay) ketLuan += "BẠN ĐÃ THẮNG! 🎉";
+        else if (diemNguoi < diemMay) ketLuan += "MÁY ĐÃ THẮNG! 🤖";
+        else ketLuan += "HÒA NHAU! 🤝";
+
+        document.getElementById("trangThai").innerText = ketLuan;
+        document.getElementById("trangThai").style.color = "#28a745";
+        document.getElementById("trangThai").style.fontSize = "22px";
+
+        // Hiện nút Chơi Lại
+        document.getElementById("btnChoiLai").style.display = "block";
+      }
+
+      function choiLai() {
+        // Đặt lại các biến dữ liệu
+        diemNguoi = 0;
+        diemMay = 0;
+        lanChoi = 1;
+
+        // Xóa giao diện cũ
+        document.getElementById("diemNguoi").innerText = diemNguoi;
+        document.getElementById("diemMay").innerText = diemMay;
+        document.getElementById("lichSu").innerHTML = "";
+
+        document.getElementById("trangThai").innerText =
+          "Hãy chọn Kéo, Búa, hoặc Bao để bắt đầu!";
+        document.getElementById("trangThai").style.color = "#d9534f";
+        document.getElementById("trangThai").style.fontSize = "18px";
+
+        // Mở lại các nút
+        const buttons = document.querySelectorAll(".buttons button");
+        buttons.forEach((btn) => (btn.disabled = false));
+
+        // Ẩn nút chơi lại
+        document.getElementById("btnChoiLai").style.display = "none";
+      }
+    </script>
+  </body>
+</html>
